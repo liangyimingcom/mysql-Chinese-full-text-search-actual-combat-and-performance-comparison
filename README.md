@@ -1,4 +1,4 @@
-# mysql中文全文检索实战与性能对比
+tag: mysql中文全文检索实战与性能对比
 
 
 
@@ -6,7 +6,9 @@
 
 - **先说结论，mysql80使用中文全文检索方式查询，相比select Like%语句，可以快几倍甚至百倍，也可以慢几倍；**
 - **其查询速度完全取决于查询场景是否符合全文检索最佳实践，本次实战的对比结果如下：**
-- **在超过500万行记录的中文内容字段下测试出此结论，详情如下：**
+- **在超过500万(csv容量3.5GB)行记录的中文内容字段下测试出此结论，详情如下：**
+
+
 
 
 
@@ -40,7 +42,22 @@
 
 #### 4）环境说明：
 
-**mysql80，配置 32c/128g/500GB，单表3列简单schema，一个自增字段+两个VARCHAR/TEXT字段，500W行随机中文长句；**
+**mysql80，配置 32c/128g/500GB，单表3列简单schema，一个自增字段+两个VARCHAR/TEXT字段，500W(csv容量3.5GB)行随机中文长句；**
+
+AWS硬件配置说明：
+
+| NO   | 类型    | AWS型号                 | 配置     | 容量      | 版本或操作系统                 | 端口及访问                                                   |      |
+| ---- | ------- | ----------------------- | -------- | --------- | ------------------------------ | ------------------------------------------------------------ | ---- |
+| 1    | 数据库  | AWS RDS  db.m6g.8xlarge | 32c/128g | 500GB SSD | Mysql 8.0.26                   | 采用私有子网部署，公网无法直接访问；可通过服务器内网访问  ·     端口开放：3306(仅供内网) |      |
+| 2    | 服务器1 | AWS EC2  m5.xlarge      | 4c/16g   | 500GB SSD | Microsoft  Windows Server 2019 | 可以通过公网RDP访问；可以连通RDS数据库3306端口；  ·     端口开放：RDP端口3389；端口开放：80,443 |      |
+
+ 表结构：![image-20211117175947018](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117175947018.png)
+
+导出csv后的容量：
+
+![image-20211117180402644](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117180402644.png)
+
+
 
 
 
@@ -144,6 +161,8 @@ SELECT count(*) FROM articles WHERE MATCH (title,body) AGAINST ('美国政府致
 ![image-20211117163845938](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117163845938.png)
 
 ![image-20211117164244323](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117164244323.png)
+
+
 
 
 
@@ -394,7 +413,7 @@ WHERE MATCH (title,body)
 AGAINST ('一路 一带');
 ```
 
-![img](https:////upload-images.jianshu.io/upload_images/10135025-d4b1f2b194f1f7ce.png)
+![image-20211117180220560](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117180220560.png)
 
 上面的示例返回结果会自动按照相关性排序，相关性高的在前面。相关性的值是一个非负浮点数，0表示无相关性。
 
@@ -406,7 +425,7 @@ FROM articles
 ORDER BY score DESC;
 ```
 
-![img](https:////upload-images.jianshu.io/upload_images/10135025-3beb89066bd862e7.png)
+![image-20211117180234040](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117180234040.png)
 
 ```sql
 -- 获取匹配结果记录数
@@ -424,7 +443,7 @@ WHERE MATCH (title,body)
 AGAINST ('+腾讯' IN BOOLEAN MODE);
 ```
 
-![img](https:////upload-images.jianshu.io/upload_images/10135025-a742c83c9bd75f79.png)
+![image-20211117180244344](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117180244344.png)
 
 ```sql
 -- 必须包含"腾讯"，但是不能包含"通讯工具"
@@ -433,7 +452,7 @@ WHERE MATCH (title,body)
 AGAINST ('+腾讯 -通讯工具' IN BOOLEAN MODE);
 ```
 
-![img](https:////upload-images.jianshu.io/upload_images/10135025-fe018feaf08100d3.png)
+![image-20211117180255908](https://raw.githubusercontent.com/liangyimingcom/storage/master/PicGo/image-20211117180255908.png)
 
 下面的例子演示了BOOLEAN模式下运算符的使用方式：
 
